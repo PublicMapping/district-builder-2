@@ -6,9 +6,16 @@ import {
   ServiceUnavailableException,
   UnauthorizedException
 } from "@nestjs/common";
-import { BaseExceptionFilter } from "@nestjs/core";
 import { Request } from "express";
+import { BaseExceptionFilter } from "@nestjs/core";
 import { RollbarService } from "./rollbar.service";
+
+export interface IGetUserAuthInfoRequest extends Request {
+  user?: {
+    id: number;
+  };
+  socket: any;
+}
 
 function isWhitelisted(exception: HttpException) {
   // Note that we don't need to whitelist BadRequestException as it has it's
@@ -33,9 +40,9 @@ export class RollbarExceptionFilter extends BaseExceptionFilter {
       (exception instanceof Error && !(exception instanceof HttpException))
     ) {
       const ctx = host.switchToHttp();
-      const request = ctx.getRequest<Request>();
+      const request = ctx.getRequest<IGetUserAuthInfoRequest>();
 
-      this.rollbar.error(exception, request);
+      this.rollbar.error(exception, { ...request, user_id: request.user ? request.user.id : null });
     }
 
     // Delegate error messaging and response to default global exception filter
