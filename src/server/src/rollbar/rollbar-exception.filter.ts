@@ -49,7 +49,7 @@ export class RollbarExceptionFilter extends BaseExceptionFilter {
 
       this.rollbar.error(exception, request, {
         ...customPayload,
-        ip_address: request.headers.get("x-forwarded-for") || request.socket.remoteAddress
+        ip_address: request.socket.remoteAddress
       });
     }
 
