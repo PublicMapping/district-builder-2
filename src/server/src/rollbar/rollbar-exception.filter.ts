@@ -52,11 +52,10 @@ export class RollbarExceptionFilter extends BaseExceptionFilter {
     ) {
       const ctx = host.switchToHttp();
       const request = ctx.getRequest<IGetUserAuthInfoRequest>();
-
       this.rollbar.error(exception, {
         ...request,
         user_id: request.user ? request.user.id : null,
-        user_ip: parseIp(request)
+        ip_address: parseIp(request)
       });
     }
 
