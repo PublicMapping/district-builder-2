@@ -27,6 +27,13 @@ function isWhitelisted(exception: HttpException) {
   );
 }
 
+function parseIp(req: IGetUserAuthInfoRequest): string {
+  // @ts-ignore
+  const ip: string =
+    req.headers["x-forwarded-for"]?.split(",").shift() || req.socket?.remoteAddress;
+  return ip;
+}
+
 @Catch()
 export class RollbarExceptionFilter extends BaseExceptionFilter {
   constructor(private rollbar: RollbarService) {
@@ -42,7 +49,11 @@ export class RollbarExceptionFilter extends BaseExceptionFilter {
       const ctx = host.switchToHttp();
       const request = ctx.getRequest<IGetUserAuthInfoRequest>();
 
-      this.rollbar.error(exception, { ...request, user_id: request.user ? request.user.id : null });
+      this.rollbar.error(exception, {
+        ...request,
+        user_id: request.user ? request.user.id : null,
+        user_ip: parseIp(request)
+      });
     }
 
     // Delegate error messaging and response to default global exception filter
