@@ -345,6 +345,7 @@ export class ProjectsController implements CrudController<Project> {
       relations: ["regionConfig"]
     });
     if (!project) {
+      throw new Error("foo");
       throw new NotFoundException(`Project ${id} not found`);
     }
     // If the region is archived we can't calculate districts
