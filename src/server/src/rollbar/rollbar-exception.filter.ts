@@ -14,7 +14,6 @@ export interface IGetUserAuthInfoRequest extends Request {
   user?: {
     id: number;
   };
-  socket: any;
 }
 
 function isWhitelisted(exception: HttpException) {
@@ -27,11 +26,16 @@ function isWhitelisted(exception: HttpException) {
   );
 }
 
-function parseIp(req: IGetUserAuthInfoRequest): string {
-  // @ts-ignore
-  const ip: string =
-    req.headers["x-forwarded-for"]?.split(",").shift() || req.socket?.remoteAddress;
-  return ip;
+function parseIp(req: IGetUserAuthInfoRequest): string | undefined {
+  if (req.headers["x-forwarded-for"]) {
+    if (Array.isArray(req.headers["x-forwarded-for"])) {
+      return [...req.headers["x-forwarded-for"]].shift();
+    } else {
+      return req.headers["x-forwarded-for"]?.split(",").shift();
+    }
+  } else {
+    return req.socket?.remoteAddress;
+  }
 }
 
 @Catch()
