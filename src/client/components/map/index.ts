@@ -101,6 +101,36 @@ export function getPviLabels() {
   return ["> +20R", "+5R to +20R", "Even", "+5D to +20D", "> +20D"];
 }
 
+export function getPviBuckets() {
+    return [
+        {
+            name: "R",
+            label: "> +20R",
+            color: "#a52a0d"
+        },
+        {
+            name: "Lean R",
+            label: "+5R to +20R",
+            color: "#ed512c"
+        },
+        {
+            name: "Even",
+            label: "+5R to +20R",
+            color: "#CDCDCD"
+        },
+        {
+            name: "Lean D",
+            label: "+5D to +20D",
+            color: "#6491b5"
+        },
+        {
+            name: "D",
+            label: "> +20D",
+            color: "#385d7a"
+        }
+    ];
+}
+
 export function getEqualPopulationStops(
   popThresholdNum: number,
   avgPopulation: number
