@@ -1,56 +1,99 @@
 /** @jsx jsx */
-import { Box, Flex, jsx } from "theme-ui";
-import { DistrictsGeoJSON } from "../../../types";
-import { computeRowBucket } from "./Competitiveness";
-import { getPviBuckets } from "../../map";
+import { Flex, jsx } from "theme-ui";
+import { DistrictsGeoJSON, EvaluateMetricWithValue, PviBucket } from "../../../types";
+import { Bar } from "@visx/shape";
+import { Group } from "@visx/group";
+import { scaleLinear, scaleBand } from "@visx/scale";
+import { Axis } from "@visx/axis";
+import { getPviBuckets, getPviSteps } from "../../map";
+import { calculatePVI } from "../../../functions";
 
-const barWidth = 80;
-const maxBarHeight = 180;
-const Bar = ({
-  height,
-  color,
-  index
+const CompetitivenessChart = ({
+  geojson,
+  metric
 }: {
-  readonly height: string;
-  readonly color: string;
-  readonly index: number;
-}) => (
-  <Box
-    sx={{
-      width: `${barWidth}px`,
-      height: height,
-      position: "absolute",
-      bottom: "0px",
-      left: `${index * barWidth}px`,
-      backgroundColor: color,
-      flex: "1"
-    }}
-  ></Box>
-);
-
-const CompetitivenessChart = ({ geojson }: { readonly geojson?: DistrictsGeoJSON }) => {
+  readonly geojson?: DistrictsGeoJSON;
+  readonly metric?: EvaluateMetricWithValue;
+}) => {
   const buckets =
     geojson &&
     geojson?.features
       .filter(f => f.id !== 0 && f.properties.demographics.population > 0)
       .map(f => {
-        const bucket = computeRowBucket(f.properties.pvi);
+        const pvi = f.properties.voting && calculatePVI(f.properties.voting, metric?.electionYear);
+        const bucket = pvi && computeRowBucket(pvi);
         return (bucket && bucket.name) || "";
       })
       // @ts-ignore
       // eslint-disable-next-line
       .reduce((a, c) => ((a[c] = (a[c] || 0) + 1), a), Object.create(null));
 
-  function computeHeight(name: string): string {
-    const val =
-      name in buckets && geojson?.features
-        ? `${(buckets[name] /
-            geojson?.features.filter(f => f.id !== 0 && f.properties.demographics.population > 0)
-              .length) *
-            maxBarHeight}px`
-        : "1px";
-    return val;
+  const chartData: readonly PviBucket[] = getPviBuckets().map(bucket => {
+    return { ...bucket, count: buckets[bucket.name] || 0 };
+  });
+
+  function computeRowBucket(value: number) {
+    const buckets = getPviBuckets();
+    const stops = getPviSteps();
+    // eslint-disable-next-line
+    for (let i = 0; i < stops.length; i++) {
+      const r = stops[i];
+      if (value >= r[0]) {
+        if (i < stops.length - 1) {
+          const r1 = stops[i + 1];
+          if (value < r1[0]) {
+            return buckets[i];
+          }
+        } else {
+          return buckets[i];
+        }
+      } else {
+        return buckets[i];
+      }
+    }
   }
+
+  const width = 400;
+  const height = 250;
+  const margin = { top: 50, bottom: 50, left: 50, right: 20 };
+
+  const xMax = width - margin.left - margin.right;
+  const yMax = height - margin.top - margin.bottom;
+
+  const leftAxisWidth = 30;
+
+  // accessors
+  const x = (d: PviBucket) => d.name;
+  const y = (d: PviBucket) => (d.count ? +d.count : 0);
+
+  const xScale = scaleBand({
+    range: [leftAxisWidth, xMax],
+    round: true,
+    domain: chartData.map(x),
+    padding: 0.4
+  });
+
+  const yScale = scaleLinear({
+    range: [yMax, 10],
+    round: true,
+    domain: [0, Math.max(...chartData.map(y))]
+  });
+
+  // const compose = (
+  //   scale: ScaleContinuousNumeric<number, number, never> | ScaleBand<string>,
+  //   accessor: (d: PviBucket[]) => number | string
+  // ) => (data: PviBucket[]) => scale(accessor(data));
+  // const xPoint = compose(xScale, x);
+  // const yPoint = compose(yScale, y);
+
+  // @ts-ignore
+  // eslint-disable-next-line
+  const compose: any = (scale, accessor) => data => scale(accessor(data));
+  // @ts-ignore
+  const xPoint = compose(xScale, x);
+  // @ts-ignore
+  const yPoint = compose(yScale, y);
+
   return (
     <Flex
       sx={{
@@ -62,9 +105,36 @@ const CompetitivenessChart = ({ geojson }: { readonly geojson?: DistrictsGeoJSON
         flexShrink: 0
       }}
     >
-      {getPviBuckets().map((bucket, i) => (
-        <Bar height={computeHeight(bucket.name)} color={bucket.color} key={bucket.name} index={i} />
-      ))}
+      <svg width={width} height={height}>
+        {chartData.map((d, i) => {
+          const barHeight = yMax - yPoint(d);
+          return (
+            <Group key={`bar-${i}`}>
+              <Bar
+                x={xPoint(d)}
+                y={yMax - barHeight}
+                height={barHeight}
+                width={xScale.bandwidth()}
+                fill={d.color}
+              />
+            </Group>
+          );
+        })}
+        <Axis
+          scale={xScale}
+          hideTicks={true}
+          label="Political Lean"
+          orientation="bottom"
+          top={yMax}
+        />
+        <Axis
+          scale={yScale}
+          label="# of districts"
+          left={leftAxisWidth}
+          orientation="left"
+          numTicks={3}
+        />
+      </svg>
     </Flex>
   );
 };

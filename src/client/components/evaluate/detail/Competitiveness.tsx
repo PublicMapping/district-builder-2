@@ -1,11 +1,10 @@
 /** @jsx jsx */
 import { Box, Flex, jsx, Styled, ThemeUIStyleObject, Heading } from "theme-ui";
-import { getPviSteps, getPviBuckets } from "../../map/index";
+import { getPviSteps } from "../../map/index";
 import { DistrictsGeoJSON, EvaluateMetricWithValue } from "../../../types";
 import PVIDisplay from "../../PVIDisplay";
 import { formatPvi, computeRowFill, calculatePVI } from "../../../functions";
 import CompetitivenessChart from "./CompetitivenessChart";
-
 
 const style: ThemeUIStyleObject = {
   table: {
@@ -74,6 +73,7 @@ const CompetitivenessMetricDetail = ({
           {formatPvi(metric.party, metric.value)}
         </span>
       </Heading>
+      <CompetitivenessChart geojson={geojson} metric={metric} />
       <Styled.table sx={style.table}>
         <thead>
           <Styled.tr>
