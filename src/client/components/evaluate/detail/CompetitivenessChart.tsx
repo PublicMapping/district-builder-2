@@ -83,8 +83,6 @@ const CompetitivenessChart = ({
   //   scale: ScaleContinuousNumeric<number, number, never> | ScaleBand<string>,
   //   accessor: (d: PviBucket[]) => number | string
   // ) => (data: PviBucket[]) => scale(accessor(data));
-  // const xPoint = compose(xScale, x);
-  // const yPoint = compose(yScale, y);
 
   // @ts-ignore
   // eslint-disable-next-line
