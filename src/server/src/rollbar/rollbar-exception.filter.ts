@@ -41,26 +41,18 @@ export class RollbarExceptionFilter extends BaseExceptionFilter {
     ) {
       const ctx = host.switchToHttp();
       const request = ctx.getRequest<IGetUserAuthInfoRequest>();
-      // eslint-disable-next-line
-      let customPayload;
-      if (request.user) {
-        customPayload = request.user
-          ? {
-              user_id: request.user.id
-            }
-          : {};
-        // eslint-disable-next-line
-        console.error("user is found");
-      } else {
-        customPayload = null;
-        // eslint-disable-next-line
-        console.error("user is missing");
-      }
+      const customPayload = request.user
+        ? {
+            user_id: request.user.id
+          }
+        : {};
 
-      this.rollbar.error(exception, request, {
+      const error = this.rollbar.error(exception, request, {
         ...customPayload,
         ip_address: request.socket.remoteAddress
       });
+      // eslint-disable-next-line
+      console.error(`rollbar id#${error}`);
     }
 
     // Delegate error messaging and response to default global exception filter
