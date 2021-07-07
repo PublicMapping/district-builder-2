@@ -130,7 +130,7 @@ const CompetitivenessChart = ({
           label="# of districts"
           left={leftAxisWidth}
           orientation="left"
-          numTicks={3}
+          numTicks={4}
         />
       </svg>
     </Flex>

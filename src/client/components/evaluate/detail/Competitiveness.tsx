@@ -69,7 +69,7 @@ const CompetitivenessMetricDetail = ({
     <Box>
       <Heading as="h2" sx={{ variant: "text.h5", mt: 4 }}>
         Partisan Voting Index (PVI):
-        <span sx={{ color: metric.party?.color || "#000" }}>
+        <span sx={{ color: metric.party?.color || "#000", ml: "10px", mb: "10px" }}>
           {formatPvi(metric.party, metric.value)}
         </span>
       </Heading>
