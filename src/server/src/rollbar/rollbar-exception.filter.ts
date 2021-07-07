@@ -49,9 +49,11 @@ export class RollbarExceptionFilter extends BaseExceptionFilter {
             user_id: request.user.id
           }
         : {};
+        // eslint-disable-next-line
         console.error("user is found")
       } else {
         customPayload = null;
+        // eslint-disable-next-line
         console.error("user is missing")
       }
       
