@@ -4,9 +4,9 @@ import {
   HttpException,
   NotFoundException,
   ServiceUnavailableException,
+  Request,
   UnauthorizedException
 } from "@nestjs/common";
-import { Request } from "express";
 import { BaseExceptionFilter } from "@nestjs/core";
 import { RollbarService } from "./rollbar.service";
 
@@ -14,6 +14,7 @@ export interface IGetUserAuthInfoRequest extends Request {
   user?: {
     id: number;
   };
+  socket: any;
 }
 
 function isWhitelisted(exception: HttpException) {
@@ -24,18 +25,6 @@ function isWhitelisted(exception: HttpException) {
     exception instanceof ServiceUnavailableException ||
     exception instanceof UnauthorizedException
   );
-}
-
-function parseIp(req: IGetUserAuthInfoRequest): string | undefined {
-  if (req.headers["x-forwarded-for"]) {
-    if (Array.isArray(req.headers["x-forwarded-for"])) {
-      return [...req.headers["x-forwarded-for"]].shift();
-    } else {
-      return req.headers["x-forwarded-for"]?.split(",").shift();
-    }
-  } else {
-    return req.socket?.remoteAddress;
-  }
 }
 
 @Catch()
@@ -52,10 +41,15 @@ export class RollbarExceptionFilter extends BaseExceptionFilter {
     ) {
       const ctx = host.switchToHttp();
       const request = ctx.getRequest<IGetUserAuthInfoRequest>();
-      this.rollbar.error(exception, {
-        ...request,
-        user_id: request.user ? request.user.id : null,
-        ip_address: parseIp(request)
+      const customPayload = request.user
+        ? {
+            user_id: request.user.id
+          }
+        : {};
+
+      this.rollbar.error(exception, request, {
+        ...customPayload,
+        ip_address: request.socket.remoteAddress
       });
     }
 
