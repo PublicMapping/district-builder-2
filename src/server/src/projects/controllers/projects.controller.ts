@@ -346,7 +346,7 @@ export class ProjectsController implements CrudController<Project> {
     });
     if (!project) {
       throw new Error("foo");
-      throw new NotFoundException(`Project ${id} not found`);
+      // throw new NotFoundException(`Project ${id} not found`);
     }
     // If the region is archived we can't calculate districts
     if (project.regionConfig.archived && !project.districts) {

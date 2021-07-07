@@ -41,11 +41,20 @@ export class RollbarExceptionFilter extends BaseExceptionFilter {
     ) {
       const ctx = host.switchToHttp();
       const request = ctx.getRequest<IGetUserAuthInfoRequest>();
-      const customPayload = request.user
+      // eslint-disable-next-line
+      let customPayload;
+      if (request.user) {
+        customPayload = request.user
         ? {
             user_id: request.user.id
           }
         : {};
+        console.error("user is found")
+      } else {
+        customPayload = null;
+        console.error("user is missing")
+      }
+      
 
       this.rollbar.error(exception, request, {
         ...customPayload,
