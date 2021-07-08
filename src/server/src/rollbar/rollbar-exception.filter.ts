@@ -54,7 +54,7 @@ export class RollbarExceptionFilter extends BaseExceptionFilter {
       const request = ctx.getRequest<IGetUserAuthInfoRequest>();
       this.rollbar.error(exception, {
         ...request,
-        user_id: request.user ? request.user.id : null,
+        person: request.user ? { id: request.user.id } : {},
         ip_address: parseIp(request)
       });
     }
