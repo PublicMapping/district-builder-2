@@ -21,7 +21,7 @@ async function bootstrap(): Promise<void> {
   app.useGlobalInterceptors(new ClassSerializerInterceptor(app.get(Reflector)));
   app.useGlobalFilters(new BadRequestExceptionFilter());
   app.use(bodyParser.json({ limit: "50mb" }));
-  app.use(bodyParser.urlencoded({ limit: "50mb", extended: true }));
+  app.use(bodyParser.urlencoded({ limit: "50mb", extended: true, parameterLimit: 100000 }));
 
   // Save the output of 'listen' to a variable, which is a Node http.Server
   const server = await app.listen(3005);
