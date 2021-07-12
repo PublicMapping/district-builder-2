@@ -1,9 +1,11 @@
 /** @jsx jsx */
-import { Box, Flex, jsx, Styled, ThemeUIStyleObject, Heading } from "theme-ui";
+import { Box, Flex, jsx, Styled, ThemeUIStyleObject, Heading, Button } from "theme-ui";
 import { getPviSteps } from "../../map/index";
 import { DistrictsGeoJSON, EvaluateMetricWithValue } from "../../../types";
 import PVIDisplay from "../../PVIDisplay";
 import { formatPvi, computeRowFill, calculatePVI } from "../../../functions";
+import { checkPlanScoreAPI } from "../../../api";
+import { IProject, PlanScoreAPIResponse } from "../../../../shared/entities";
 
 const style: ThemeUIStyleObject = {
   table: {
@@ -53,17 +55,33 @@ const style: ThemeUIStyleObject = {
   },
   blankValue: {
     color: "gray.2"
+  },
+  menuButton: {
+    color: "muted"
   }
 };
 
 const CompetitivenessMetricDetail = ({
   metric,
-  geojson
+  geojson,
+  project
 }: {
   readonly metric: EvaluateMetricWithValue;
   readonly geojson?: DistrictsGeoJSON;
+  readonly project?: IProject;
 }) => {
   const choroplethStops = getPviSteps();
+  const openInNewTab = (url: string) => {
+    const newWindow = window.open(url, "_blank", "noopener,noreferrer");
+    // eslint-disable-next-line
+    if (newWindow) newWindow.opener = null;
+  };
+  function sendToPlanScore() {
+    project &&
+      checkPlanScoreAPI(project).then((data: PlanScoreAPIResponse) => {
+        openInNewTab(data.plan_url);
+      });
+  }
   return (
     <Box>
       <Heading as="h2" sx={{ variant: "text.h5", mt: 4 }}>
@@ -114,6 +132,23 @@ const CompetitivenessMetricDetail = ({
           )}
         </tbody>
       </Styled.table>
+      <Box>
+        <Button
+          sx={{
+            ...{
+              variant: "buttons.primary",
+              fontWeight: "light",
+              maxHeight: "34px",
+              borderBottom: "none",
+              borderBottomColor: "blue.2"
+            },
+            ...style.menuButton
+          }}
+          onClick={() => sendToPlanScore()}
+        >
+          <span>Send to PlanScore API</span>
+        </Button>
+      </Box>
     </Box>
   );
 };
