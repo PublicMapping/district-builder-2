@@ -6,14 +6,15 @@ import {
   projectArchive,
   projectArchiveSuccess,
   projectArchiveFailure,
-  projectsFetch,
-  projectsFetchFailure,
-  projectsFetchSuccess,
   globalProjectsFetch,
   globalProjectsFetchPage,
   globalProjectsFetchSuccess,
   globalProjectsFetchFailure,
-  setDeleteProject
+  setDeleteProject,
+  userProjectsFetch,
+  userProjectsFetchSuccess,
+  userProjectsFetchFailure,
+  userProjectsFetchPage
 } from "../actions/projects";
 
 import { IProject } from "../../shared/entities";
@@ -31,12 +32,24 @@ export interface ProjectsState {
     readonly totalItems?: number;
     readonly totalPages?: number;
   };
+  readonly userProjectsPagination: {
+    readonly currentPage: number;
+    readonly limit: number;
+    readonly totalItems?: number;
+    readonly totalPages?: number;
+  };
   readonly archiveProjectPending: boolean;
 }
 
 export const initialState = {
   // User projects
   projects: { isPending: false },
+  userProjectsPagination: {
+    currentPage: 1,
+    limit: 4,
+    totalItems: undefined,
+    totalPages: undefined
+  },
   // All projects
   globalProjects: { isPending: false },
   globalProjectsPagination: {
@@ -53,24 +66,43 @@ const projectsReducer: LoopReducer<ProjectsState, Action> = (
   action: Action
 ): ProjectsState | Loop<ProjectsState, Action> => {
   switch (action.type) {
-    case getType(projectsFetch):
+    case getType(userProjectsFetch):
       return loop(
         {
           ...state,
           projects: { isPending: true }
         },
         Cmd.run(fetchProjects, {
-          successActionCreator: projectsFetchSuccess,
-          failActionCreator: projectsFetchFailure,
-          args: [] as Parameters<typeof fetchProjects>
+          successActionCreator: userProjectsFetchSuccess,
+          failActionCreator: userProjectsFetchFailure,
+          args: [
+            state.userProjectsPagination.currentPage,
+            state.userProjectsPagination.limit
+          ] as Parameters<typeof fetchProjects>
         })
       );
-    case getType(projectsFetchSuccess):
+    case getType(userProjectsFetchPage):
+      return loop(
+        {
+          ...state,
+          userProjectsPagination: {
+            ...state.userProjectsPagination,
+            currentPage: action.payload
+          }
+        },
+        Cmd.action(userProjectsFetch())
+      );
+    case getType(userProjectsFetchSuccess):
       return {
         ...state,
-        projects: { resource: action.payload }
+        projects: { resource: action.payload.items },
+        userProjectsPagination: {
+          ...state.userProjectsPagination,
+          totalItems: action.payload.meta.totalItems,
+          totalPages: action.payload.meta.totalPages
+        }
       };
-    case getType(projectsFetchFailure):
+    case getType(userProjectsFetchFailure):
       return loop(
         {
           ...state,
@@ -142,6 +174,7 @@ const projectsReducer: LoopReducer<ProjectsState, Action> = (
         deleteProject: undefined,
         archiveProjectPending: false,
         globalProjectsPagination: state.globalProjectsPagination,
+        userProjectsPagination: state.userProjectsPagination,
         projects:
           "resource" in state.projects
             ? {

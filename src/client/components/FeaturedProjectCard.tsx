@@ -46,7 +46,6 @@ const FeaturedProjectCard = ({ project }: { readonly project: ProjectNest }) => 
   const mapRef = useRef<HTMLDivElement>(null);
   const [mapLoaded, setMapLoaded] = useState<boolean>(false);
   const history = useHistory();
-
   function goToProject(project: ProjectNest) {
     history.push(`/projects/${project.id}`);
   }

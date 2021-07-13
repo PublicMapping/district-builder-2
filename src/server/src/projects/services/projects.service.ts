@@ -51,4 +51,30 @@ export class ProjectsService extends TypeOrmCrudService<Project> {
       : builder;
     return paginate<Project>(builderWithFilter, options);
   }
+
+  async findAllUserProjectsPaginated(
+    userId: string,
+    options: AllProjectsOptions
+  ): Promise<Pagination<Project>> {
+    // Returns admin-only listing of all organization projects
+    const builder = this.repo
+      .createQueryBuilder("project")
+      .innerJoinAndSelect("project.regionConfig", "regionConfig")
+      .innerJoinAndSelect("project.user", "user")
+      .leftJoinAndSelect("project.chamber", "chamber")
+      .where("user.id = :userId", { userId })
+      .select([
+        "project.id",
+        "project.numberOfDistricts",
+        "project.name",
+        "project.updatedDt",
+        "project.createdDt",
+        "project.districts",
+        "regionConfig.name",
+        "user.id",
+        "user.name"
+      ])
+      .orderBy("project.updatedDt", "DESC");
+    return paginate<Project>(builder, options);
+  }
 }
