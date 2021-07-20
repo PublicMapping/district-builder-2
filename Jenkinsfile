@@ -50,7 +50,10 @@ node {
           sh 'docker-compose -f docker-compose.ci.yml run --rm terraform ./scripts/infra plan'
           withCredentials([[$class: 'StringBinding',
                   credentialsId: 'DB_ROLLBAR_ACCESS_TOKEN',
-                  variable: 'DB_ROLLBAR_ACCESS_TOKEN']]) {
+                  variable: 'DB_ROLLBAR_ACCESS_TOKEN'], 
+                  [$class: 'StringBinding',
+                  credentialsId: 'DB_PLAN_SCORE_API_TOKEN',
+                  variable: 'DB_PLAN_SCORE_API_TOKEN']]) {
             sh 'docker-compose -f docker-compose.ci.yml run --rm terraform ./scripts/infra apply'
           }
         }
