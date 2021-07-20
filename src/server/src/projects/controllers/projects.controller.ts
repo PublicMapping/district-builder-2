@@ -493,7 +493,7 @@ export class ProjectsController implements CrudController<Project> {
     @ParsedRequest() req: CrudRequest,
     @Param("id") projectId: ProjectId
   ): Promise<Project> {
-    const planScoreToken = process.env.PLAN_SCORE_TOKEN || "";
+    const planScoreToken = process.env.PLAN_SCORE_API_TOKEN || "";
     const project = await this.service.findOne(projectId, { relations: ["regionConfig"] });
     const geojson = project && {
       ...project.districts,
