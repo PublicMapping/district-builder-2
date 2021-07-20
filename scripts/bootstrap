@@ -6,7 +6,7 @@ if [[ -n "${DB_DEBUG}" ]]; then
     set -x
 fi
 
-DIR="$(dirname "$0")/../server"
+DIR="$(dirname "$0")/../src/server"
 
 function usage() {
     echo -n \
