@@ -1,7 +1,7 @@
 import { Injectable } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
 import { TypeOrmCrudService } from "@nestjsx/crud-typeorm";
-import { Repository } from "typeorm";
+import { Repository, SelectQueryBuilder } from "typeorm";
 
 import { Project } from "../entities/project.entity";
 import { ProjectVisibility } from "../../../../shared/constants";
@@ -9,6 +9,7 @@ import { paginate, Pagination, IPaginationOptions } from "nestjs-typeorm-paginat
 
 type AllProjectsOptions = IPaginationOptions & {
   readonly completed?: boolean;
+  readonly userId?: string;
 };
 
 @Injectable()
@@ -21,16 +22,12 @@ export class ProjectsService extends TypeOrmCrudService<Project> {
     return this.repo.save(project);
   }
 
-  async findAllPublishedProjectsPaginated(
-    options: AllProjectsOptions
-  ): Promise<Pagination<Project>> {
-    // Returns admin-only listing of all organization projects
-    const builder = this.repo
+  getProjectsBase(): SelectQueryBuilder<Project> {
+    return this.repo
       .createQueryBuilder("project")
       .innerJoinAndSelect("project.regionConfig", "regionConfig")
       .innerJoinAndSelect("project.user", "user")
       .leftJoinAndSelect("project.chamber", "chamber")
-      .where("project.visibility = :published", { published: ProjectVisibility.Published })
       .select([
         "project.id",
         "project.numberOfDistricts",
@@ -43,6 +40,14 @@ export class ProjectsService extends TypeOrmCrudService<Project> {
         "user.name"
       ])
       .orderBy("project.updatedDt", "DESC");
+  }
+
+  async findAllPublishedProjectsPaginated(
+    options: AllProjectsOptions
+  ): Promise<Pagination<Project>> {
+    const builder = this.getProjectsBase().andWhere("project.visibility = :published", {
+      published: ProjectVisibility.Published
+    });
     const builderWithFilter = options.completed
       ? // Completed projects are defined as having no population in the unassigned district
         builder.andWhere(
@@ -50,5 +55,14 @@ export class ProjectsService extends TypeOrmCrudService<Project> {
         )
       : builder;
     return paginate<Project>(builderWithFilter, options);
+  }
+
+  async findAllUserProjectsPaginated(
+    userId: string,
+    options: AllProjectsOptions
+  ): Promise<Pagination<Project>> {
+    const builder = this.getProjectsBase().andWhere("user.id = :userId", { userId });
+
+    return paginate<Project>(builder, options);
   }
 }
