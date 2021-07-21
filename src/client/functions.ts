@@ -215,7 +215,9 @@ export const hasMultipleElections = (staticMetadata?: IStaticMetadata) =>
 export const has16Election = (staticMetadata?: IStaticMetadata) => {
   return (
     staticMetadata?.voting?.some(file => file.id.endsWith("16")) ||
-    (staticMetadata?.voting && Object.keys(staticMetadata?.voting || {}).length > 0 && !has20Election(staticMetadata))
+    (staticMetadata?.voting &&
+      Object.keys(staticMetadata?.voting || {}).length > 0 &&
+      !has20Election(staticMetadata))
   );
 };
 
